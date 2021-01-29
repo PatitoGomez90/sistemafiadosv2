@@ -1,0 +1,565 @@
+{% extends './template.html' %}
+
+{% block content %}
+
+<style>
+    #addNombre, #addApellido {
+        text-transform: uppercase;
+    }
+</style>
+
+<div class="ui grid">
+    <div class="row" style="padding: 0;">
+        <div class="twelve wide column" style="margin-bottom: 10px;">
+            <div class="ui clearing segment">
+                <div class="ui form inline">
+                    <div class="fields" style="margin: 0;">
+                        <div class="field" style="padding-top: 10px;">
+                            <strong>Elija una opcion</strong>
+                        </div>
+                        <div class="field">
+                            <select class="ui dropdown" id="agencias">
+                                <option value="0">Todas las Agencias</option>
+                                <option value="agencia1">Agencia 1</option>
+                                <option value="agencia2">Agencia 2</option>
+                                <option value="agencia3">Agencia 3</option>
+                                <option value="agencia4">Agencia 4</option>
+                                <option value="agencia5">Agencia 5</option>
+                            </select>
+                        </div>
+                        <div class="field" style="margin-top: 2px;">
+                            <button class="ui blue button" data-tooltip="Filtrar" data-inverted="" id="btnFiltrar">
+                                <i class="search icon" style="margin: 0;"></i>
+                            </button>
+                        </div>
+                        <div class="field" style="margin-left: 150px; padding-top: 10px;">
+                            <strong>Buscar por</strong>
+                        </div>
+                        <div class="field">
+                            <select class="ui dropdown" id="filtro_clientes">
+                                <option value="0">Nombre</option>
+                                <option value="1">Apellido</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <input type="text" class="ui input" id="searchByNombre" onkeyup="buscarXnombre()">
+                            <input type="text" class="ui input" id="searchByApellido" style="display: none;" onkeyup="buscarXapellido()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="twelve wide column" style="margin-top: 10px;">
+            <div id="tabla" style="max-height: 500px; overflow-y: scroll;">
+                <table class="ui tabla sortable selectable celled table stackable" id="tabla_clientes">
+                    <thead>
+                        <tr class="center aligned">
+                            <th>Nombre</th>
+                            <th>Apellido</th>
+                            <th class="no-sort">Telefono</th>
+                            <th>Agencia</th>
+                            <th class="orderable">Saldo $</th>
+                            <th class="no-sort">Fecha Ultima Apuesta</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="four wide column" style="margin-top:10px;">
+            <h4 class="center aligned ui block header">Saldo de Todas las Agencias</h4>
+            <div class="ui fluid input">
+                <input type="text" id="saldoTotalAgencias" readonly="" style="text-align: right; font-weight: bold; color: red">
+            </div>
+            <div id="div_saldo_agencia" style="display: none; margin-top: 20px;">
+                <h4 class="center aligned ui block header">Saldo de la Agencia <span id="IdSaldoPorAgencia"></span></h4>
+                <div class="ui fluid input">
+                    <input type="$ text" id="saldoByAgencia" readonly="" style="text-align: right; font-weight: bold; color: red">
+                </div>
+            </div>
+            <h4 class="center aligned ui block header">Acciones</h4>
+            <div class="ui form">
+                <div class="equal width fields">
+                    <div class="field">
+                        <button class="ui green fluid button" id="btnAgregarCliente">Agregar Cliente</button>
+                    </div>
+                    <div class="field">
+                        <button class="ui teal fluid button" onClick="printDiv()">Imprimir Tabla</button>
+                    </div>
+                </div>
+                <div class="equal width fields">
+                    <div class="field">
+                        <button class="ui red fluid button" id="btnEliminarCliente">Eliminar Cliente</button>
+                    </div>
+                    <div class="field">
+                        <button class="ui orange fluid button" id="btnModificarCliente">Modificar Cliente</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <button class="ui blue fluid button" id="btnVerApuestas">Ver Apuestas</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="ui modal" id="modalEliminarCliente">
+    <i class="close icon"></i>
+    <div class="header">
+        Confirmar
+    </div>
+    <div class="content">
+        <input type="hidden" id="idEliminarCliente">
+        <span style="font-size: 20px; font-weight: bold;">¿ Desea Eliminar el cliente ?</span>
+    </div>
+    <div class="actions">
+        <div class="ui red deny button">
+            Cancelar
+        </div>
+        <div class="ui green button" id="btnAceptarEliminarCliente">
+            Aceptar
+        </div>
+    </div>
+</div>
+
+<div class="ui modal" id="modalModificarCliente">
+    <i class="close icon"></i>
+    <div class="header">
+        Modificar Cliente
+    </div>
+    <div class="content">
+        <div class="ui form">
+            <input type="hidden" id="modifIdCliente">
+            <div class="equal width fields">
+                <div class="field">
+                    <label for="modifNombre">Nombre</label>
+                    <input type="text" id="modifNombre" maxlength="25" style="text-transform: uppercase;">
+                </div>
+                <div class="field">
+                    <label for="modifApellido">Apellido</label>
+                    <input type="text" id="modifApellido" maxlength="25" style="text-transform: uppercase;">
+                </div>
+            </div>
+            <div class="equal width fields">
+                <div class="field">
+                    <label for="modifTelefono">Telefono</label>
+                    <input type="text" id="modifTelefono">
+                </div>
+                <div class="field">
+                    <label for="modifAgencia">Agencia</label>
+                    <select class="ui dropdown" id="modifAgencia">
+                        <option value="0">Seleccione una Agencia</option>
+                        <option value="agencia1">Agencia 1</option>
+                        <option value="agencia2">Agencia 2</option>
+                        <option value="agencia3">Agencia 3</option>
+                        <option value="agencia4">Agencia 4</option>
+                        <option value="agencia5">Agencia 5</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="actions">
+        <div class="ui red deny button">
+            Cancelar
+        </div>
+        <div class="ui green button" id="btnGuardarModificarCliente">
+            Guardar
+        </div>
+    </div>
+</div>
+
+<div class="ui modal" id="modalAgregarCliente">
+    <i class="close icon"></i>
+    <div class="header">
+        Agregar Cliente
+    </div>
+    <div class="content">
+        <div class="ui form">
+            <div class="equal width fields">
+                <div class="field">
+                    <label for="addNombre">Nombre</label>
+                    <input type="text" id="addNombre" maxlength="25">
+                </div>
+                <div class="field">
+                    <label for="addApellido">Apellido</label>
+                    <input type="text" id="addApellido" maxlength="25">
+                </div>
+            </div>
+            <div class="equal width fields">
+                <div class="field">
+                    <label for="addTelefono">Telefono</label>
+                    <input type="text" id="addTelefono">
+                </div>
+                <div class="field">
+                    <label for="addAgencia">Agencia</label>
+                    <select class="ui dropdown" id="addAgencia">
+                        <option value="0">Seleccione una Agencia</option>
+                        <option value="agencia1">Agencia 1</option>
+                        <option value="agencia2">Agencia 2</option>
+                        <option value="agencia3">Agencia 3</option>
+                        <option value="agencia4">Agencia 4</option>
+                        <option value="agencia5">Agencia 5</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="actions">
+        <div class="ui red deny button">
+            Cancelar
+        </div>
+        <div class="ui green button" id="btnGuardarNuevoCliente">
+            Guardar
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(function () {
+        var objDatos = localStorage.getItem('objDatos');
+        objDatos = JSON.parse(objDatos);
+        var agencia = 0;
+        if(objDatos != null) agencia = objDatos.agencia;
+        console.log(agencia)
+        $("#agencias").dropdown('set selected', agencia);
+        // initTable();
+        $("#btnFiltrar").click();        
+    });
+
+    $('#tabla_clientes').tablesort();
+    $('thead th.orderable').data('sortBy', function(th, td, tablesort) {
+        return parseFloat(td.text().replace(/,/g, ''), 16);
+    });
+
+    $("#btnFiltrar").click(() => {
+        $("#btnVerApuestas").removeAttr('data-id');
+        $("#btnEliminarCliente").removeAttr('data-id');
+        $("#btnModificarCliente").removeAttr('data-id');
+        $("#btnVerApuestas").removeAttr('data-id');
+        var agencia = $("#agencias").val();
+        var objDatos = { "agencia": agencia }
+        objDatos = JSON.stringify(objDatos);
+        localStorage.setItem('objDatos', objDatos);
+        if (agencia != '0') {
+            $("#div_saldo_agencia").show();
+            $(".someBlock").preloader({ text: 'Cargando' });
+            $.getJSON("/clientes/getClientesByAgencia/" + agencia, (data) => {
+                console.log(data);
+                $("#saldoTotalAgencias").val('$ ' + numberWithCommas((data.apuestas[0].totalApuestas).toFixed(2)));
+                $(".someBlock").preloader('remove');
+                var html = '';
+                var saldo = 0;
+                var nro_agencia = agencia.charAt(agencia.length - 1);
+                $("#IdSaldoPorAgencia").text(nro_agencia);
+                if (data.clientes.length > 0) {
+                    $.each(data.clientes, (i, item) => {
+                        html += '<tr data-id="' + item.id_cliente + '">' +
+                            '<td>' + item.nombre.toUpperCase() + '</td>' +
+                            '<td>' + item.apellido.toUpperCase() + '</td>' +
+                            '<td class="right aligned">' + item.telefono + '</td>' +
+                            '<td class="center aligned">' + item.agencia.toUpperCase() + '</td>' +
+                            '<td class="right aligned">' + numberWithCommas((item.saldo).toFixed(2)) + '</td>' +
+                            '<td class="center aligned">' + item.fecha + '</td>' +
+                            '</tr>';
+                        saldo += item.saldo;
+                    });
+                } else {
+                    html += '<tr><td colspan="6" style="text-align: center; font-size: 18px; font-weight: bold;">No hay Registros Cargados en esta Agencia</td></tr>'
+                }
+
+                $("#tbody").html(html);
+                $("#saldoByAgencia").val("$ "+numberWithCommas((saldo).toFixed(2)))
+
+                // REMARCO EL COMPROBANTE SELECCIONADO
+                $("#tbody tr").on("click", function () {
+                    $("#tbody tr").removeClass("error");
+                    var selected = $(this).hasClass("error");
+                    if (!selected) $(this).addClass("error");
+
+                    var id = $(this).data('id');
+
+                    // AGREGO DATA AL BOTON IMPUTAR
+                    $("#btnEliminarCliente").attr('data-id', id);
+                    $("#btnModificarCliente").attr('data-id', id);
+                    $("#btnVerApuestas").attr('data-id', id);
+                });
+            });
+        } else {
+            initTable();
+            $("#div_saldo_agencia").hide();
+        }
+    });
+
+    $("#filtro_clientes").change(function() {
+        console.log($(this).val())
+        if($(this).val() == "0"){
+            $("#searchByNombre").show();
+            $("#searchByApellido").hide();
+        } else {
+            $("#searchByNombre").hide();
+            $("#searchByApellido").show();
+        }
+    })
+
+    function buscarXnombre() {
+        var input, filtro, table, tr, td, i;
+        input = document.getElementById("searchByNombre");
+        filtro = input.value.toUpperCase();
+        table = document.getElementById("tbody");
+        tr = table.getElementsByTagName("tr");
+
+        for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[0];
+            if (td) {
+                if (td.innerHTML.toUpperCase().indexOf(filtro) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+
+    function buscarXapellido(){
+        var input, filtro, table, tr, td, i;
+        input = document.getElementById("searchByApellido");
+        filtro = input.value.toUpperCase();
+        table = document.getElementById("tbody");
+        tr = table.getElementsByTagName("tr");
+
+        for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[1];
+            if (td) {
+                if (td.innerHTML.toUpperCase().indexOf(filtro) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+
+    function initTable() {
+        $("#tbody").html('');
+        $("#btnVerApuestas").attr('data-id', '');
+        $("#tbody > tr").removeClass("error");
+        $("#btnEliminarCliente").removeAttr('data-id');
+        $("#btnModificarCliente").removeAttr('data-id');
+        $(".someBlock").preloader({ text: 'Cargando' });
+        var agencia = $("#agencias").val();
+        $.getJSON("/clientes/ajax/"+agencia, function(data) {
+            $(".someBlock").preloader('remove');
+            console.log(data);
+            var html = '';
+            var saldo = 0;
+            $.each(data.clientes, (i, item) => {
+                html += '<tr data-id="' + item.id_cliente + '">' +
+                    '<td>' + item.nombre.toUpperCase() + '</td>' +
+                    '<td>' + item.apellido.toUpperCase() + '</td>' +
+                    '<td class="right aligned">' + item.telefono + '</td>' +
+                    '<td class="center aligned">' + item.agencia.toUpperCase() + '</td>' +
+                    '<td class="right aligned">' + numberWithCommas((item.saldo).toFixed(2)) + '</td>' +
+                    '<td class="center aligned">' + item.fecha + '</td>' +
+                    '</tr>';
+                saldo += item.saldo;
+            });
+
+            $("#tbody").html(html);
+
+            // REMARCO EL COMPROBANTE SELECCIONADO
+            $("#tbody > tr").on("click", function () {
+                $("#tbody > tr").removeClass("error");
+
+                var selected = $(this).hasClass("error");
+                if (!selected)
+                    $(this).addClass("error");
+
+                var id = $(this).data('id');
+
+                // AGREGO DATA AL BOTON IMPUTAR
+                $("#btnEliminarCliente").attr('data-id', id);
+                $("#btnModificarCliente").attr('data-id', id);
+                $("#btnVerApuestas").attr('data-id', id);
+            });
+
+            $("#saldoTotalAgencias").val('$ ' + numberWithCommas((saldo).toFixed(2)));
+        });
+    }
+
+    $("#btnAgregarCliente").click(() => {
+        $("#addNombre").val('');
+        $("#addApellido").val('');
+        $("#addAgencia").parent().dropdown('set selected', '0');
+        $("#addTelefono").val('');
+        $("#modalAgregarCliente").modal('show');
+    });
+
+    $("#btnGuardarNuevoCliente").click((e) => {
+        e.preventDefault();
+        var nombre = $("#addNombre").val();
+        var apellido = $("#addApellido").val();
+        var telefono = $("#addTelefono").val();
+        var agencia = $("#addAgencia").val();
+
+        if (nombre != '') {
+            if (agencia != '0') {
+
+                var obj = {
+                    nombre: nombre,
+                    apellido: apellido,
+                    telefono: telefono,
+                    agencia: agencia
+                }
+
+                $.post("/clientes/agregarcliente", obj, (data) => {
+                    console.log(data);
+                    if (data.exito) {
+                        alerta('success', data.exito, 'Exito !');
+                        $("#modalAgregarCliente").modal('hide');
+                        $("#btnFiltrar").click();
+                    } else {
+                        alerta('error', 'Hubo un error.', 'Error !');
+                    }
+                });
+            } else {
+                alerta('warning', 'Seleccione una Agencia', 'Alerta !');
+            }
+        } else {
+            alerta('warning', 'Ingrese un Nombre', 'Alerta !');
+        }
+    });
+
+    var btnEliminarCliente = document.getElementById('btnEliminarCliente');
+    btnEliminarCliente.addEventListener('click', function () {
+        var id = btnEliminarCliente.getAttribute('data-id');
+        if (id != '' && id != null) {
+            $("#idEliminarCliente").val(id);
+            $("#modalEliminarCliente").modal('show');
+        } else {
+            alerta('warning', 'Seleccione un Cliente', 'Alerta !');
+        }
+    });
+
+    $("#btnAceptarEliminarCliente").click(() => {
+        var id = $("#idEliminarCliente").val();
+        $.getJSON('/clientes/eliminarCliente/' + id, (data) => {
+            if (data.exito) {
+                alerta('success', data.exito, 'Exito !');
+                $("#modalEliminarCliente").modal('hide');
+                $("#btnFiltrar").click();
+            } else {
+                alerta('success', 'Hubo un error.', 'Error !');
+            }
+        });
+    });
+
+    var btnModificarCliente = document.getElementById('btnModificarCliente');
+    btnModificarCliente.addEventListener('click', function () {
+        var id = btnModificarCliente.getAttribute('data-id');
+        if (id != '' && id != null) {
+            $("#modifIdCliente").val('');
+            $("#modifNombre").val('');
+            $("#modifApellido").val('');
+            $("#modifTelefono").val('');
+            $("#modifAgencia").dropdown('set selected', '0');
+            $.getJSON("/clientes/getCliente/" + id, (data) => {
+                if (data.length > 0) {
+                    $("#modifIdCliente").val(id);
+                    $("#modifNombre").val(data[0].nombre);
+                    $("#modifApellido").val(data[0].apellido);
+                    $("#modifTelefono").val(data[0].telefono);
+                    $("#modifAgencia").dropdown('set selected', data[0].agencia);
+                    $("#modalModificarCliente").modal('show');
+                } else {
+                    alerta('error', 'No se pudo encontrar el cliente', 'Error !');
+                }
+            });
+        } else {
+            alerta('warning', 'Seleccione un Cliente.', 'Alerta !');
+        }
+    });
+
+    $("#btnGuardarModificarCliente").click((e) => {
+        e.preventDefault();
+        var nombre = $("#modifNombre").val();
+        var apellido = $("#modifApellido").val();
+        var telefono = $("#modifTelefono").val();
+        var agencia = $("#modifAgencia").val();
+
+        if (nombre != '') {
+            if (agencia != '0') {
+
+                var obj = {
+                    id: $("#modifIdCliente").val(),
+                    nombre: nombre,
+                    apellido: apellido,
+                    telefono: telefono,
+                    agencia: agencia
+                }
+
+                $.post("/clientes/modificarCliente", obj, (data) => {
+                    if (data.exito) {
+                        alerta('success', data.exito, 'Exito !');
+                        $("#modalModificarCliente").modal('hide');
+                        $("#btnFiltrar").click();
+                    } else {
+                        alerta('error', 'Hubo un error.', 'Error !');
+                    }
+                });
+            } else {
+                alerta('warning', 'Seleccione una Agencia', 'Alerta !');
+            }
+        } else {
+            alerta('warning', 'Ingrese un Nombre', 'Alerta !');
+        }
+    });
+
+    var btnVerApuestas = document.getElementById('btnVerApuestas');
+    btnVerApuestas.addEventListener('click', function() {
+        var id = btnVerApuestas.getAttribute('data-id');
+        if(id != null && id != ""){
+            var fecha = new Date();
+            var day = fecha.getDate();
+            if (day < 10)
+                day = "0" + day;
+            var month = fecha.getMonth() + 1;
+            if (month < 10)
+                month = "0" + month;
+            var year = fecha.getFullYear();
+
+            var fecha1 = '01/' + month + '/' + year;
+            var fecha2 = day + '/' + month + '/' + year;
+            var agencia = $("#agencias").val();
+            var objDatos = { "fecha_01": fecha1, "fecha_02": fecha2, "agencia": agencia }
+            objDatos = JSON.stringify(objDatos);
+            localStorage.setItem('objDatos', objDatos);
+            window.location = '/clientes/getApuestas/'+id;
+        } else {
+            alerta('warning', 'Seleccione un Registro', 'Alerta!');
+        }
+    });
+
+    printDiv = function() {
+        var divToPrint = '';
+
+        var divToPrint=document.getElementById('tabla');
+
+        var newWin=window.open('','Print-Window');
+
+        newWin.document.open();
+
+        var total = $("#saldoTotalAgencias").val();
+
+        newWin.document.write('<html><link rel="stylesheet" href="/css/semantic.min.css" type="text/css" media="print" /><style>.no-print{display:none;}</style><body onload="window.print()" style="font-size: 0.7em"><h1 style="text-align: center;" class="ui blue header">CLIENTES</h1><div style="padding-left: 20px; padding-right: 20px;">'+divToPrint.innerHTML+'</div><div style="margin-top: 50px; padding-left: 20px;"><h3 class="blue header">Total: '+total+'</h3></div></body></html>');
+
+        newWin.document.close();
+
+        setTimeout(function(){newWin.close();},10);
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,577 @@
+{% extends './template.html' %}
+
+{% block content %}
+
+<div class="ui grid">
+    <div class="eight wide column">
+        <h2 class="ui dividing blue header">{{ pagename }} <span id="nombre_cliente" style="text-transform: uppercase;"></span> - <span id="agencia" style="text-transform: uppercase;"></span></h2>
+    </div>
+    <div class="twelve wide column" style="padding-bottom: 0;">
+        <div class="ui clearing segment">
+            <div class="ui form inline">
+                <div class="fields" style="margin: 0;">
+                    <div class="field" style="padding-top: 10px;">
+                        <strong>Filtrar por</strong>
+                    </div>
+                    <div class="field">
+                        <select class="ui dropdown" id="filtrarPor">
+                            <option value="0">Todas las Apuestas</option>
+                            <option value="1">Fechas</option>
+                        </select>
+                    </div>
+                    <div class="fields" id="div_filtro_fecha" style="display: none; margin-bottom: 0; margin-right: 10px;">
+                        <div class="field" style="padding-top: 10px;">
+                            <strong>Desde</strong>
+                        </div>
+                        <div class="field" style="max-width: 150px;">
+                            <div class="ui calendar" id="fecha">
+                                <div class="ui input left icon">
+                                    <i class="calendar icon"></i>
+                                    <input type="text" id="fecha_desde" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field" style="padding-top: 10px;">
+                            <strong>Hasta</strong>
+                        </div>
+                        <div class="field" style="max-width: 150px;">
+                            <div class="ui calendar" id="fecha2">
+                                <div class="ui input left icon">
+                                    <i class="calendar icon"></i>
+                                    <input type="text" id="fecha_hasta" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field" style="margin-top: 2px;">
+                        <button class="ui blue button" data-tooltip="Filtrar" data-inverted="" id="btnFiltrar">
+                            <i class="search icon" style="margin: 0;"></i>
+                        </button>
+                    </div>
+                    <div class="field" style="margin-top: 2px;">
+                        <button class="ui orange button" onClick="printDiv()">Imprimir</button>
+                    </div>
+                    <div class="field" style="margin-top: 2px;">
+                        <a class="ui red button" href="/">Volver</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="twelve wide column">
+        <div id="tabla" style="max-height: 450px; overflow-y: scroll;">
+            <table class="ui tabla selectable celled table stackable">
+                <thead>
+                    <tr class="center aligned">
+                        <th>Fecha</th>
+                        <th>Debe</th>
+                        <th>Haber</th>
+                        <th>Saldo $</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="four wide column">
+        <h4 class="center aligned ui block header">Acciones</h4>
+        <div class="ui form">
+            <div class="field">
+                <button class="ui green fluid button" id="btnAgregarApuesta">Agregar Apuestas</button>
+            </div>
+            <div class="equal width fields">
+                <div class="field">
+                    <button class="ui red fluid button" id="btnEliminarApuesta">Eliminar Apuesta</button>
+                </div>
+                <div class="field">
+                    <button class="ui orange fluid button" id="btnModificarApuesta">Modificar Apuesta</button>
+                </div>
+            </div>
+        </div>
+        <div id="div_saldo_hasta" style="display: none;">
+            <h4 class="center aligned ui block header">Saldo hasta <span id="saldoHasta"></span></h4>
+            <div class="ui fluid input">
+                <input type="text" id="saldoTotalClienteHasta" readonly="" style="text-align: right; font-weight: bold; color: red">
+            </div>
+        </div>
+        <h4 class="center aligned ui block header">Saldo Total</h4>
+        <div class="ui fluid input">
+            <input type="text" id="saldoTotalCliente" readonly="" style="text-align: right; font-weight: bold; color: red">
+        </div>
+    </div>
+</div>
+
+<div class="ui modal" id="modalEliminarApuesta">
+    <i class="close icon"></i>
+    <div class="header">
+        Confirmar
+    </div>
+    <div class="content">
+        <input type="hidden" id="idEliminarApuesta">
+        <span style="font-size: 20px; font-weight: bold;">¿ Desea Eliminar la Apuesta ?</span>
+    </div>
+    <div class="actions">
+        <div class="ui red deny button">
+            Cancelar
+        </div>
+        <div class="ui green button" id="btnAceptarEliminarApuesta">
+            Aceptar
+        </div>
+    </div>
+</div>
+
+<div class="ui modal small" id="modalModificarApuesta">
+    <i class="close icon"></i>
+    <div class="header">
+        Modificar Apuesta
+    </div>
+    <div class="content">
+        <div class="ui form">
+            <input type="hidden" id="modifIdApuesta">
+            <div class="equal width fields">
+                <div class="field">
+                    <label>Fecha</label>
+                    <div class="ui calendar" id="fechaModif">
+                        <div class="ui input left icon">
+                            <i class="calendar icon"></i>
+                            <input type="text" id="modifFecha" readonly>
+                        </div>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Jugo</label>
+                    <input type="text" id="modifJugo" onKeyPress="return soloNumeros(event)">
+                </div>
+                <div class="field">
+                    <label>Pago</label>
+                    <input type="text" id="modifPago" onKeyPress="return soloNumeros(event)">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="actions">
+        <div class="ui red deny button">
+            Cancelar
+        </div>
+        <div class="ui green button" id="btnGuardarModificarApuesta">
+            Guardar
+        </div>
+    </div>
+</div>
+
+<div class="ui modal small" id="modalAgregarApuesta">
+    <i class="close icon"></i>
+    <div class="header">
+        Agregar Apuestas
+    </div>
+    <div class="content" style="max-height: 450px; padding: 10px;">
+        <div style="min-height: 100%;">
+            <table class="ui tabla celled table">
+                <thead>
+                    <tr style="text-align: center;">
+                        <th>Fecha</th>
+                        <th>Jugo</th>
+                        <th>Pago</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody_apuestas">
+                    <tr>
+                        <td><div class="ui fluid input"><input type="text" class="addFecha"></div></td>
+                        <td><div class="ui fluid input"><input type="text" class="addJugo" onKeyPress="return soloNumeros(event)"></div></td>
+                        <td><div class="ui fluid input"><input type="text" class="addPago" onKeyPress="return soloNumeros(event)"></div></td>
+                    </tr>
+                    <tr>
+                        <td><div class="ui fluid input"><input type="text" class="addFecha"></div></td>
+                        <td><div class="ui fluid input"><input type="text" class="addJugo" onKeyPress="return soloNumeros(event)"></div></td>
+                        <td><div class="ui fluid input"><input type="text" class="addPago" onKeyPress="return soloNumeros(event)"></div></td>
+                    </tr>
+                    <tr>
+                        <td><div class="ui fluid input"><input type="text" class="addFecha"></div></td>
+                        <td><div class="ui fluid input"><input type="text" class="addJugo" onKeyPress="return soloNumeros(event)"></div></td>
+                        <td><div class="ui fluid input"><input type="text" class="addPago" onKeyPress="return soloNumeros(event)"></div></td>
+                    </tr>
+                    <tr>
+                        <td><div class="ui fluid input"><input type="text" class="addFecha"></div></td>
+                        <td><div class="ui fluid input"><input type="text" class="addJugo" onKeyPress="return soloNumeros(event)"></div></td>
+                        <td><div class="ui fluid input"><input type="text" class="addPago" onKeyPress="return soloNumeros(event)"></div></td>
+                    </tr>
+                    <tr>
+                        <td><div class="ui fluid input"><input type="text" class="addFecha"></div></td>
+                        <td><div class="ui fluid input"><input type="text" class="addJugo" onKeyPress="return soloNumeros(event)"></div></td>
+                        <td><div class="ui fluid input"><input type="text" class="addPago" onKeyPress="return soloNumeros(event)"></div></td>
+                    </tr>
+                    <tr>
+                        <td><div class="ui fluid input"><input type="text" class="addFecha"></div></td>
+                        <td><div class="ui fluid input"><input type="text" class="addJugo" onKeyPress="return soloNumeros(event)"></div></td>
+                        <td><div class="ui fluid input"><input type="text" class="addPago" onKeyPress="return soloNumeros(event)"></div></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="actions">
+        <div class="ui red deny button">
+            Cancelar
+        </div>
+        <div class="ui green button" id="btnGuardarAddApuesta">
+            Guardar
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/js/calendar.min.js"></script>
+<script type="text/javascript" src="/js/jquery.maskedinput.js"></script>
+<script>
+    $("#filtrarPor").change(function(){
+        if($(this).val() == "1"){
+            $("#div_filtro_fecha").show();
+        } else {
+            $("#div_filtro_fecha").hide();
+        }
+    });
+
+    $(".addFecha").mask("99/99/9999");
+    $("#btnAgregarApuesta").click(function(){
+        $("#modalAgregarApuesta").modal('show');
+    })
+
+    const id = "{{ id_cliente }}";
+
+    $(function () {
+        initTable();
+        var objDatos = localStorage.getItem('objDatos');
+        objDatos = JSON.parse(objDatos);
+        $("#fecha_desde").val(objDatos.fecha_01);
+        $("#fecha_hasta").val(objDatos.fecha_02);
+        $('#fecha, #fecha2').calendar({
+            type: 'date',
+            monthFirst: false,
+            formatter: {
+                date: function (date, settings) {
+                    var day = date.getDate();
+                    if (day < 10)
+                        day = "0" + day;
+                    var month = date.getMonth() + 1;
+                    if (month < 10)
+                        month = "0" + month;
+                    var year = date.getFullYear();
+                    return day + '/' + month + '/' + year;
+                }
+            },
+            text: {
+                days: ['D', 'L', 'M', 'M', 'J', 'V', 'S'],
+                months: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+                monthsShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                today: 'Hoy',
+                now: 'Ahora',
+                am: 'AM',
+                pm: 'PM'
+            }
+        });
+    });
+
+    function initTable() {
+        $("#tbody").html("");
+        $("#btnEliminarApuesta").removeAttr('data-id');
+        $("#btnModificarApuesta").removeAttr('data-id');
+        $.getJSON("/clientes/getApuestasAjax/" + id, (data) => {
+            console.log(data);
+            var html = ""
+            $("#nombre_cliente").text(data.cliente[0].nombre);
+            $("#agencia").text(data.cliente[0].agencia)
+            if (data.apuestas.length > 0) {
+                $.each(data.apuestas, (i, item) => {
+                    html += '<tr data-id="'+item.id_ap+'">' +
+                        '<td style="text-align: center;">' + item.fecha_txt + '</td>' +
+                        '<td style="text-align: right;">' + numberWithCommas((item.jugo).toFixed(2)) + '</td>' +
+                        '<td style="text-align: right;">' + numberWithCommas((item.pago).toFixed(2)) + '</td>' +
+                        '<td style="text-align: right;"></td>' +
+                        '</tr>';
+                });
+
+                $("#tbody").html(html);
+
+                // REMARCO EL COMPROBANTE SELECCIONADO
+                $("#tbody > tr").on("click", function () {
+                    $("#tbody > tr").removeClass("error");
+                    var selected = $(this).hasClass("error");
+                    if (!selected) $(this).addClass("error");
+
+                    var id_apuesta = $(this).data('id');
+
+                    // AGREGO DATA AL BOTON IMPUTAR
+                    $("#btnEliminarApuesta").attr('data-id', id_apuesta);
+                    $("#btnModificarApuesta").attr('data-id', id_apuesta);
+                });
+
+                var len = $("#tbody tr").length - 1;
+                for (i = len; i >= 0; i--) {
+                    if (i == len) {
+                        var jugo = $("#tbody tr:eq(" + i + ") td:eq(1)").text();
+                        jugo = jugo.replace(/,/g, '');
+                        jugo = parseFloat(jugo);
+                        var pago = $("#tbody tr:eq(" + i + ") td:eq(2)").text();
+                        pago = pago.replace(/,/g, '');
+                        pago = parseFloat(pago);
+                        $("#tbody tr:eq(" + i + ") td:eq(3)").text(numberWithCommas((jugo - pago).toFixed(2)));
+                    } else {
+                        var jugo = $("#tbody tr:eq(" + i + ") td:eq(1)").text();
+                        jugo = jugo.replace(/,/g, '');
+                        jugo = parseFloat(jugo);
+                        var pago = $("#tbody tr:eq(" + i + ") td:eq(2)").text();
+                        pago = pago.replace(/,/g, '');
+                        pago = parseFloat(pago);
+
+                        var saldoAnterior = $("#tbody tr:eq(" + (i + 1) + ") td:eq(3)").text();
+                        saldoAnterior = saldoAnterior.replace(/,/g, '');
+                        saldoAnterior = parseFloat(saldoAnterior);
+
+                        $("#tbody tr:eq(" + i + ") td:eq(3)").text(numberWithCommas((saldoAnterior + (jugo - pago)).toFixed(2)));
+                        $("#saldoTotalCliente").val("$ "+numberWithCommas((saldoAnterior + (jugo - pago)).toFixed(2)))
+                    }
+                }
+            } else {
+                html += '<tr><td colspan="4" style="text-align: center; font-size: 18px; font-weight: bold;">No hay Apuestas Cargadas para este Cliente</td></tr>';
+                $("#tbody").html(html);
+            }
+        });
+    }
+
+    var btnEliminarApuesta = document.getElementById('btnEliminarApuesta');
+    btnEliminarApuesta.addEventListener('click', function(){
+        var id_apuesta = btnEliminarApuesta.getAttribute('data-id');
+        if(id_apuesta != null && id_apuesta != ''){
+            $("#idEliminarApuesta").val(id_apuesta);
+            $("#modalEliminarApuesta").modal('show');
+        } else {
+            alerta("warning", "Seleccione un Registro", "Alerta!");
+        }
+    });
+
+    $("#btnAceptarEliminarApuesta").click(() => {
+        var id_apuesta = $("#idEliminarApuesta").val();
+        $.getJSON("/clientes/eliminarApuesta/"+id_apuesta, function(data){
+            alerta("success", "Apuesta Eliminada", "Exito!");
+            $("#modalEliminarApuesta").modal('hide');
+            initTable()
+        });
+    });
+
+    $("#btnVerTodaslasApuestas").click(function(){
+        $("#div_saldo_hasta").hide()
+        initTable();
+    })
+
+    $("#btnFiltrar").click(function(){
+        $("#tbody").html("");
+        $("#btnEliminarApuesta").removeAttr('data-id');
+        $("#btnModificarApuesta").removeAttr('data-id');
+        var filtro = $("#filtrarPor").val();
+        if(filtro == "0"){
+            initTable();
+
+            $("#div_saldo_hasta").hide();
+        } else {
+            $("#div_saldo_hasta").show();
+            var desde = $("#fecha_desde").val();
+            var hasta = $("#fecha_hasta").val();
+            var agencia = $("#agencia").val()
+            var objDatos = { "fecha_01": desde, "fecha_02": hasta, "agencia": agencia}
+            objDatos = JSON.stringify(objDatos);
+            localStorage.setItem('objDatos', objDatos);
+            $.getJSON("/clientes/getApuestasPorFecha/"+id+"/"+encodeURIComponent(desde)+"/"+encodeURIComponent(hasta), function(data){
+                console.log(data);
+                var html = ""
+                if (data.apuestas.length > 0) {
+                    $.each(data.apuestas, (i, item) => {
+                        html += '<tr data-id="'+item.id_ap+'">' +
+                            '<td style="text-align: center;">' + item.fecha_txt + '</td>' +
+                            '<td style="text-align: right;">' + numberWithCommas((item.jugo).toFixed(2)) + '</td>' +
+                            '<td style="text-align: right;">' + numberWithCommas((item.pago).toFixed(2)) + '</td>' +
+                            '<td style="text-align: right;"></td>' +
+                            '</tr>';
+                    });
+
+                    $("#tbody").html(html);
+
+                    // REMARCO EL COMPROBANTE SELECCIONADO
+                    $("#tbody > tr").on("click", function () {
+                        $("#tbody > tr").removeClass("error");
+                        var selected = $(this).hasClass("error");
+                        if (!selected) $(this).addClass("error");
+
+                        var id_apuesta = $(this).data('id');
+
+                        // AGREGO DATA AL BOTON IMPUTAR
+                        $("#btnEliminarApuesta").attr('data-id', id_apuesta);
+                        $("#btnModificarApuesta").attr('data-id', id_apuesta);
+                    });
+
+                    var len = $("#tbody tr").length - 1;
+                    var saldoAnterior = data.saldoanterior[0].saldo;
+                    $("#div_saldo_hasta").show();
+                    $("#saldoHasta").text(desde);
+                    for (i = len; i >= 0; i--) {
+                        if (i == len) {
+                            var jugo = parseFloat($("#tbody tr:eq(" + i + ") td:eq(1)").text().replace(/,/g, ''));
+                            var pago = parseFloat($("#tbody tr:eq(" + i + ") td:eq(2)").text().replace(/,/g, ''));
+                            $("#tbody tr:eq(" + i + ") td:eq(3)").text(numberWithCommas((saldoAnterior + (jugo - pago)).toFixed(2)));
+                        } else {
+                            var jugo = parseFloat($("#tbody tr:eq(" + i + ") td:eq(1)").text().replace(/,/g, ''));
+                            var pago = parseFloat($("#tbody tr:eq(" + i + ") td:eq(2)").text().replace(/,/g, ''));
+                            saldoAnterior = parseFloat($("#tbody tr:eq(" + (i + 1) + ") td:eq(3)").text().replace(/,/g, ''));
+
+                            $("#tbody tr:eq(" + i + ") td:eq(3)").text(numberWithCommas((saldoAnterior + (jugo - pago)).toFixed(2)));
+                            $("#saldoTotalClienteHasta").val("$ "+numberWithCommas(data.saldoanterior[0].saldo.toFixed(2)))
+                        }
+                    }
+                    $("#saldoTotalCliente").val("$ "+numberWithCommas(data.saldototal[0].saldototal.toFixed(2)));
+                } else {
+                    html += '<tr><td colspan="4" style="text-align: center; font-size: 18px; font-weight: bold;">No hay Apuestas Cargadas en las fechas de la Busqueda</td></tr>';
+                    $("#tbody").html(html);
+                }
+            });
+        }        
+    });
+
+    printDiv = function() {
+        var divToPrint = '';
+
+        var divToPrint=document.getElementById('tabla');
+
+        var newWin=window.open('','Print-Window');
+
+        newWin.document.open();
+
+        var total = $("#saldoTotalCliente").val();
+        var cliente = $("#nombre_cliente").text()
+
+        var filtro = $("#filtrarPor").val();
+        if(filtro == "0") {
+            newWin.document.write('<html><link rel="stylesheet" href="/css/semantic.min.css" type="text/css" media="print" /><style>.no-print{display:none;}</style><body onload="window.print()" style="font-size: 0.7em"><h1 style="text-align: center;" class="ui blue header">APUESTAS</h1><h3 class="ui blue header">Cliente: '+cliente+'</h3><div style="padding-left: 20px; padding-right: 20px;">'+divToPrint.innerHTML+'</div><div style="margin-top: 50px; padding-left: 20px;"><h3 class="blue header">Total: '+total+'</h3></div></body></html>');
+        } else {
+            var desde = $("#fecha_desde").val();
+            var hasta = $("#fecha_hasta").val();
+            var total_hasta = $("#saldoTotalClienteHasta").val();
+            newWin.document.write('<html><link rel="stylesheet" href="/css/semantic.min.css" type="text/css" media="print" /><style>.no-print{display:none;}</style><body onload="window.print()" style="font-size: 0.7em"><h1 style="text-align: center;" class="ui blue header">APUESTAS</h1><h3 class="ui blue header">Cliente: '+cliente+'</h3><h3 class="ui blue header">Fecha desde '+desde+' hasta '+hasta+'</h3><div style="padding-left: 20px; padding-right: 20px;">'+divToPrint.innerHTML+'</div><div style="margin-top: 50px; padding-left: 20px;"><h3 class="ui blue header">Saldo hasta la Fecha '+hasta+' : '+total_hasta+'</h3><h3 class="blue header">Saldo Total: '+total+'</h3></div></body></html>');
+        }
+        
+
+        newWin.document.close();
+
+        setTimeout(function(){newWin.close();},10);
+    }
+
+    var btnModificarApuesta = document.getElementById('btnModificarApuesta');
+    btnModificarApuesta.addEventListener('click', function(){
+        var id_apuesta = btnModificarApuesta.getAttribute('data-id');
+        if(id_apuesta != null && id_apuesta != ""){
+            $.getJSON("/clientes/modificarApuesta/"+id_apuesta, function(data){
+                console.log(data);
+                $("#modifIdApuesta").val(id_apuesta);
+                $("#modifJugo").val(numberWithCommas(data[0].jugo.toFixed(2)));
+                $("#modifPago").val(numberWithCommas(data[0].pago.toFixed(2)));
+                $("#modifFecha").val(data[0].fecha_txt);
+                $("#modalModificarApuesta").modal({
+                    autofocus: false,
+                    onShow: function(){
+                        $('#fechaModif').calendar({
+                            type: 'date',
+                            monthFirst: false,
+                            formatter: {
+                                date: function (date, settings) {
+                                    var day = date.getDate();
+                                    if (day < 10) day = "0" + day;
+                                    var month = date.getMonth() + 1;
+                                    if (month < 10) month = "0" + month;
+                                    var year = date.getFullYear();
+                                    return day + '/' + month + '/' + year;
+                                }
+                            },
+                            text: {
+                                days: ['D', 'L', 'M', 'M', 'J', 'V', 'S'],
+                                months: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+                                monthsShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                                today: 'Hoy',
+                                now: 'Ahora',
+                                am: 'AM',
+                                pm: 'PM'
+                            }
+                        });
+                    },
+                }).modal('show');
+            });
+        } else {
+            alerta("warning", "Seleccione un Registro", "Alerta!");
+        }
+    });
+
+    $("#btnGuardarModificarApuesta").click(function(){
+        var id_apuesta = $("#modifIdApuesta").val();
+        var jugo = $("#modifJugo").val();
+        var pago = $("#modifPago").val();
+        var fecha = $("#modifFecha").val();
+        if(jugo != "" && pago != "" && fecha != ""){
+            var data = {
+                id_apuesta: id_apuesta,
+                jugo: jugo,
+                pago: pago,
+                fecha: fecha
+            }
+            $.post("/clientes/postModificarApuesta", data, function(resultado){
+                alerta("success", "Apuesta Modificada", "Exito!");
+                $("#modalModificarApuesta").modal('hide');
+                initTable();
+            });
+        } else {
+            alerta("error", "Faltan Datos", "Error!")
+        }
+    });
+
+    $("#btnGuardarAddApuesta").click(function(){
+        var array = [];
+        var bandera = true;
+        $.each($("#tbody_apuestas tr"), function(i, item){
+            var fecha = $("#tbody_apuestas tr:eq("+i+") td:eq(0) .input input").val();
+            var jugo = $("#tbody_apuestas tr:eq("+i+") td:eq(1) .input input").val();
+            var pago = $("#tbody_apuestas tr:eq("+i+") td:eq(2) .input input").val();
+            var anio = fecha.substring(6,10);
+            var mes = fecha.substring(3,5);
+            var dia = fecha.substring(0,2);
+            if((jugo != "" || pago != "") && fecha != "" && fecha.length == 10){
+                if(parseInt(anio) < 1990 || parseInt(anio) > 2050 || parseInt(mes) < 1 || parseInt(mes) > 12 || parseInt(dia) < 1 || parseInt(dia) > 31){
+                    alerta("error", "Ingrese una Fecha Valida", "Error!");
+                    bandera = false;
+                } else {
+                    var obj = {
+                        id: id,
+                        agencia: $("#agencia").text().toLowerCase(),
+                        jugo: jugo,
+                        pago: pago,
+                        fecha: fecha
+                    }
+                    array.push(obj);                    
+                }
+            }            
+        });
+        console.log(bandera);
+        if(bandera){
+            $.post("/clientes/postApuestas", {apuestas: array}, function(data){
+                console.log(data);
+                if(data.error){
+                    alerta('error', data.error, "Error!");
+                } else {
+                    alerta("success", "Apuesta/s Agregadas", "Exito!");
+                    $("#modalAgregarApuesta").modal('hide');
+                    $("#tbody_apuestas tr td .input input").val("");
+                    initTable();
+                }
+            });            
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema Fiados v2</title>
+    <link rel="stylesheet" href="/css/semantic.min.css">
+    <link rel="stylesheet" href="/css/font-awesome.all.css">
+    <link rel="stylesheet" href="/css/preloader.css">
+    <link rel="stylesheet" href="/css/toastr.css">
+    <link rel="stylesheet" type="text/css" href="/components/table.css">
+    <link rel="stylesheet" href="/css/calendar.min.css">
+    <style>
+        body { margin: 0; padding: 0; zoom: 88% !important; }
+        .ui.table.tabla thead tr:first-child > th { 
+            position: sticky !important; 
+            top: 0 !important; 
+            z-index: 5 !important; 
+            padding-bottom: 20px !important;
+            background: #dfe4ea !important;
+            color: black;
+            border: 0.5 solid white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="someBlock"></div>
+    <div class="ui top attached menu" style="margin-top: 0;">
+        <div class="ui item">
+            <h3>Sistema Fiados v2</h3>
+        </div>
+        <!-- <div class="ui item">Clientes</div> -->
+    </div>
+    <div class="ui fixed main" style="margin-top: 2em !important; margin-right: 40px; margin-left: 40px;">
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+<script type="text/javascript" src="/js/jquery-3.1.1.min.js"></script>
+<script src="/js/semantic.min.js"></script>
+<script type="text/javascript" src="/js/jquery.preloader.min.js"></script>
+<script src="/js/main.js"></script>
+<script src="/js/toastr.js"></script>
+<script src="/js/tablesort.js"></script>
+<script src="/js/calendar.min.js"></script>
+<script>
+    $('.dropdown').dropdown();
+    
+    // FUNCTION TOASTR
+    function alerta(tipo, mensaje, descripcion){
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": false,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "preventDuplicates": true,
+            "onclick": null,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "5000",
+            "extendedTimeOut": "5000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        }
+        toastr[tipo](mensaje, descripcion)
+    }
+</script>
+{% block scripts %}
+{% endblock %}
+
+</html>
