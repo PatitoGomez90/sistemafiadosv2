@@ -20,7 +20,12 @@ app.use(methodoverride());
 app.use(cookieParser('algodificil'));
 
 app.use(express.static(__dirname+'/public'));
-
+app.use(logfmt.requestLogger(function(req, res) {
+	return {
+		method: req.method,
+		path: req.path
+	}
+}))
 routes(app);
 
 var port = Number(process.env.PORT || 3000);
