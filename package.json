@@ -8,7 +8,7 @@
     "server": "nodemon app.js"
   },
   "dependencies": {
-    "async": "^1.4.2",
+    "async": "^2.6.4",
     "body-parser": "^1.2.0",
     "bower": "^1.7.9",
     "consolidate": "^0.10.0",
